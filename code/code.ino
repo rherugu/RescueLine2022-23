@@ -54,16 +54,16 @@ void greenSquare(int red1, int green1, int blue1) {
   //  Serial.print("L:\t"); Serial.print(int(red));
   //  Serial.print("\tG:\t"); Serial.print(int(green));
   //  Serial.print("\tB:\t\n"); Serial.print(int(blue));
-  float ratio = green/red;
+  float ratio = green / red;
   Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
   if (ratio > 1.25) {
     Serial.println("Left sensor seeing green!");
     greenBool[0] = true;
   }
   I2CMulti.selectPort(6); // right
-  
+
   tcs.getRGB(&red, &green, &blue);
-  float ratio1 = green/red; // int(green) > 90 && int(red) < 80 && int(blue) < 100
+  float ratio1 = green / red; // int(green) > 90 && int(red) < 80 && int(blue) < 100
   Serial.print("RATIO1: "); Serial.println(ratio1);
   if (ratio1 > 1.25) { // red = 100
     Serial.println("Right sensor seeing green!");
@@ -289,9 +289,9 @@ void loop()
 
           rightmotor.run(-200);
           leftmotor.run(70);
-          
-//          rightmotor.run(-rightMotorSpeedPing);
-//          leftmotor.run(leftMotorSpeedPing);
+
+          //          rightmotor.run(-rightMotorSpeedPing);
+          //          leftmotor.run(leftMotorSpeedPing);
           timecount++;
           Serial.println(timecount);
 
@@ -529,10 +529,10 @@ void loop()
     //      else {
     //        Serial.print("x");
     //      }
-    //    } 
+    //    }
 
-     rightmotor.run(-rightMotorSpeed);
-     leftmotor.run(leftMotorSpeed);
+    rightmotor.run(-rightMotorSpeed);
+    leftmotor.run(leftMotorSpeed);
     //
     //    if (error >=3300 || error <=-3300) {
     //      rightmotor.run(-100);
