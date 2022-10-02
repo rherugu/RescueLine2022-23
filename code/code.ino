@@ -18,8 +18,8 @@ DFRobot_I2CMultiplexer I2CMulti(0x70);
 #define bluepin 6
 #define commonAnode true
 
-//0.04 // 0.09
-#define Kp 0.11 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+//0.04 // 0.09 //0.11
+#define Kp 0.35 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255 // max speed of the robot
 #define leftMaxSpeed 255 // max speed of the robot
@@ -48,19 +48,24 @@ float red, green, blue;
 int x = 0;
 bool greenBool[2] = {false, false};
 void greenSquare(int red1, int green1, int blue1) {
-  I2CMulti.selectPort(7);
+  I2CMulti.selectPort(7); // left
   tcs.getRGB(&red, &green, &blue);
 
   //  Serial.print("L:\t"); Serial.print(int(red));
   //  Serial.print("\tG:\t"); Serial.print(int(green));
   //  Serial.print("\tB:\t\n"); Serial.print(int(blue));
-  if (int(green) > 90 && int(red) < 80 && int(blue) < 100) {
+  float ratio = green/red;
+  Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
+  if (ratio > 1.25) {
     Serial.println("Left sensor seeing green!");
     greenBool[0] = true;
   }
-  I2CMulti.selectPort(6);
+  I2CMulti.selectPort(6); // right
+  
   tcs.getRGB(&red, &green, &blue);
-  if (int(green) > 90 && int(red) < 80 && int(blue) < 100) { // red = 100
+  float ratio1 = green/red; // int(green) > 90 && int(red) < 80 && int(blue) < 100
+  Serial.print("RATIO1: "); Serial.println(ratio1);
+  if (ratio1 > 1.25) { // red = 100
     Serial.println("Right sensor seeing green!");
     greenBool[1] = true;
   }
@@ -526,8 +531,8 @@ void loop()
     //      }
     //    } 
 
-    rightmotor.run(-rightMotorSpeed);
-    leftmotor.run(leftMotorSpeed);
+     rightmotor.run(-rightMotorSpeed);
+     leftmotor.run(leftMotorSpeed);
     //
     //    if (error >=3300 || error <=-3300) {
     //      rightmotor.run(-100);
