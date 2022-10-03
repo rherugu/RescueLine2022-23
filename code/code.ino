@@ -18,8 +18,8 @@ DFRobot_I2CMultiplexer I2CMulti(0x70);
 #define bluepin 6
 #define commonAnode true
 
-//0.04 // 0.09
-#define Kp 0.11 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+//0.04 // 0.09 //0.11
+#define Kp 0.35 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255 // max speed of the robot
 #define leftMaxSpeed 255 // max speed of the robot
@@ -48,19 +48,24 @@ float red, green, blue;
 int x = 0;
 bool greenBool[2] = {false, false};
 void greenSquare(int red1, int green1, int blue1) {
-  I2CMulti.selectPort(7);
+  I2CMulti.selectPort(7); // left
   tcs.getRGB(&red, &green, &blue);
 
   //  Serial.print("L:\t"); Serial.print(int(red));
   //  Serial.print("\tG:\t"); Serial.print(int(green));
   //  Serial.print("\tB:\t\n"); Serial.print(int(blue));
-  if (int(green) > 90 && int(red) < 80 && int(blue) < 100) {
+  float ratio = green / red;
+  Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
+  if (ratio > 1.25) {
     Serial.println("Left sensor seeing green!");
     greenBool[0] = true;
   }
-  I2CMulti.selectPort(6);
+  I2CMulti.selectPort(6); // right
+
   tcs.getRGB(&red, &green, &blue);
-  if (int(green) > 90 && int(red) < 80 && int(blue) < 100) { // red = 100
+  float ratio1 = green / red; // int(green) > 90 && int(red) < 80 && int(blue) < 100
+  Serial.print("RATIO1: "); Serial.println(ratio1);
+  if (ratio1 > 1.25) { // red = 100
     Serial.println("Right sensor seeing green!");
     greenBool[1] = true;
   }
@@ -82,6 +87,8 @@ long microsecondsToCentimeters(long microseconds) {
   // take half of the distance travelled.
   return microseconds / 29 / 2;
 }
+
+
 
 void setup()
 {
@@ -176,227 +183,227 @@ bool getout = false;
 int timecount = 0;
 void loop()
 {
-  long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
-  int y = 1;
-  bool right;
-  unsigned long startTime;
-  unsigned long totalTime;
-  pinMode(pingPin, OUTPUT);
-  digitalWrite(pingPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(pingPin, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(pingPin, LOW);
-
-
-  pinMode(pingPin, INPUT);
-  duration = pulseIn(pingPin, HIGH);
-  inches = microsecondsToInches(duration);
-  cm = microsecondsToCentimeters(duration);
-
-  // ping
-  if (cm <= 8) {
-    int x = 0;
-    //    float distratio = 57.14;
-    while (x == 0)
-    {
-      pinMode(leftPing, OUTPUT);
-      digitalWrite(leftPing, LOW);
-      delayMicroseconds(2);
-      digitalWrite(leftPing, HIGH);
-      delayMicroseconds(5);
-      digitalWrite(leftPing, LOW);
-
-
-      pinMode(leftPing, INPUT);
-      durationleftPing = pulseIn(leftPing, HIGH);
-      cmleftPing = microsecondsToCentimeters(durationleftPing);
-
-      pinMode(rightPing, OUTPUT);
-      digitalWrite(rightPing, LOW);
-      delayMicroseconds(2);
-      digitalWrite(rightPing, HIGH);
-      delayMicroseconds(5);
-      digitalWrite(rightPing, LOW);
-
-
-      pinMode(rightPing, INPUT);
-      durationrightPing = pulseIn(rightPing, HIGH);
-      cmrightPing = microsecondsToCentimeters(durationrightPing);
-
-      if (cmleftPing < 30) {
-        right = true;
-      }
-      else {
-        right = false;
-      }
-
-      if (right == true) {
-        //needs to turn right
-
-        rightmotor.run(100);
-        leftmotor.run(100);
-        delay(1300);
-        rightmotor.run(0);
-        leftmotor.run(0);
-        delay(200);
-
-        timecount = 0;
-        while (timecount < 5) {
-          pinMode(leftPing, OUTPUT);
-          digitalWrite(leftPing, LOW);
-          delayMicroseconds(2);
-          digitalWrite(leftPing, HIGH);
-          delayMicroseconds(5);
-          digitalWrite(leftPing, LOW);
-
-
-          pinMode(leftPing, INPUT);
-          durationleftPing = pulseIn(leftPing, HIGH);
-          cmleftPing = microsecondsToCentimeters(durationleftPing);
-
-
-
-          int setPointVal = 10;
-          int pingError = cmleftPing - setPointVal;
-          int pingP = 25;
-          int motorSpeedPing = pingP * pingError;
-          int baseSpeedPing = 50;
-
-          int rightMotorSpeedPing = baseSpeedPing + motorSpeedPing;
-          int leftMotorSpeedPing = baseSpeedPing - motorSpeedPing;
-
-          leftMotorSpeedPing = constrain(leftMotorSpeedPing, 80, 255);
-          rightMotorSpeedPing = constrain(rightMotorSpeedPing, 80, 255);
-
-          //          Serial.print("\n\n\t\t");
-          //          Serial.println(pingError);
-          //          Serial.print("\t\t Right:");
-          //          Serial.print(rightMotorSpeedPing);
-          //          Serial.print("\t\t Left:");
-          //          Serial.print(leftMotorSpeedPing);
-
-          if (rightMotorSpeedPing < leftMotorSpeedPing) {
-            int oldright = rightMotorSpeedPing;
-            rightMotorSpeedPing = leftMotorSpeedPing;
-            leftMotorSpeedPing = oldright;
-          }
-
-          rightmotor.run(-200);
-          leftmotor.run(70);
-          
-//          rightmotor.run(-rightMotorSpeedPing);
-//          leftmotor.run(leftMotorSpeedPing);
-          timecount++;
-          Serial.println(timecount);
-
-
-          pinMode(leftPing, OUTPUT);
-          digitalWrite(leftPing, LOW);
-          delayMicroseconds(2);
-          digitalWrite(leftPing, HIGH);
-          delayMicroseconds(5);
-          digitalWrite(leftPing, LOW);
-
-
-          pinMode(leftPing, INPUT);
-          durationleftPing = pulseIn(leftPing, HIGH);
-          cmleftPing = microsecondsToCentimeters(durationleftPing);
-
-        }
-
-        rightmotor.run(100);
-        leftmotor.run(100);
-        delay(1200);
-        rightmotor.run(0);
-        leftmotor.run(0);
-        delay(200);
-
-      }
-      if (right == false) {
-        //needs to turn left
-
-        rightmotor.run(-100);
-        leftmotor.run(-100);
-        delay(1200);
-        rightmotor.run(0);
-        leftmotor.run(0);
-        delay(200);
-        timecount = 0;
-        while (timecount < 150) {
-          pinMode(rightPing, OUTPUT);
-          digitalWrite(rightPing, LOW);
-          delayMicroseconds(2);
-          digitalWrite(rightPing, HIGH);
-          delayMicroseconds(5);
-          digitalWrite(rightPing, LOW);
-
-
-          pinMode(rightPing, INPUT);
-          durationrightPing = pulseIn(rightPing, HIGH);
-          cmrightPing = microsecondsToCentimeters(durationrightPing);
-
-
-
-          int setPointVal1 = 10;
-          int pingError1 = cmrightPing - setPointVal1;
-          int pingP1 = 25;
-          int motorSpeedPing1 = pingP1 * pingError1;
-          int baseSpeedPing1 = 50;
-
-          int rightMotorSpeedPing1 = baseSpeedPing1 - motorSpeedPing1;
-          int leftMotorSpeedPing1 = baseSpeedPing1 + motorSpeedPing1;
-
-          leftMotorSpeedPing1 = constrain(leftMotorSpeedPing1, 80, 255);
-          rightMotorSpeedPing1 = constrain(rightMotorSpeedPing1, 80, 255);
-
-          //          Serial.print("\n\n\t\t");
-          //          Serial.println(pingError);
-          //          Serial.print("\t\t Right:");
-          //          Serial.print(rightMotorSpeedPing);
-          //          Serial.print("\t\t Left:");
-          //          Serial.print(leftMotorSpeedPing);
-
-          if (leftMotorSpeedPing1 < rightMotorSpeedPing1) {
-            int oldleft = leftMotorSpeedPing1;
-            leftMotorSpeedPing1 = rightMotorSpeedPing1;
-            rightMotorSpeedPing1 = oldleft;
-          }
-
-
-
-          rightmotor.run(-95);
-          leftmotor.run(225);
-          timecount++;
-          Serial.println(timecount);
-
-
-          pinMode(leftPing, OUTPUT);
-          digitalWrite(leftPing, LOW);
-          delayMicroseconds(2);
-          digitalWrite(leftPing, HIGH);
-          delayMicroseconds(5);
-          digitalWrite(leftPing, LOW);
-
-
-          pinMode(leftPing, INPUT);
-          durationleftPing = pulseIn(leftPing, HIGH);
-          cmleftPing = microsecondsToCentimeters(durationleftPing);
-
-        }
-
-        rightmotor.run(-100);
-        leftmotor.run(-100);
-        delay(1200);
-        rightmotor.run(0);
-        leftmotor.run(0);
-        delay(200);
-
-      }
-
-      x = 1;
-    }
-  }
+//  long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
+//  int y = 1;
+//  bool right;
+//  unsigned long startTime;
+//  unsigned long totalTime;
+//  pinMode(pingPin, OUTPUT);
+//  digitalWrite(pingPin, LOW);
+//  delayMicroseconds(2);
+//  digitalWrite(pingPin, HIGH);
+//  delayMicroseconds(5);
+//  digitalWrite(pingPin, LOW);
+//
+//
+//  pinMode(pingPin, INPUT);
+//  duration = pulseIn(pingPin, HIGH);
+//  inches = microsecondsToInches(duration);
+//  cm = microsecondsToCentimeters(duration);
+//
+//  // ping
+//  if (cm <= 8) {
+//    int x = 0;
+//    //    float distratio = 57.14;
+//    while (x == 0)
+//    {
+//      pinMode(leftPing, OUTPUT);
+//      digitalWrite(leftPing, LOW);
+//      delayMicroseconds(2);
+//      digitalWrite(leftPing, HIGH);
+//      delayMicroseconds(5);
+//      digitalWrite(leftPing, LOW);
+//
+//
+//      pinMode(leftPing, INPUT);
+//      durationleftPing = pulseIn(leftPing, HIGH);
+//      cmleftPing = microsecondsToCentimeters(durationleftPing);
+//
+//      pinMode(rightPing, OUTPUT);
+//      digitalWrite(rightPing, LOW);
+//      delayMicroseconds(2);
+//      digitalWrite(rightPing, HIGH);
+//      delayMicroseconds(5);
+//      digitalWrite(rightPing, LOW);
+//
+//
+//      pinMode(rightPing, INPUT);
+//      durationrightPing = pulseIn(rightPing, HIGH);
+//      cmrightPing = microsecondsToCentimeters(durationrightPing);
+//
+//      if (cmleftPing < 30) {
+//        right = true;
+//      }
+//      else {
+//        right = false;
+//      }
+//
+//      if (right == true) {
+//        //needs to turn right
+//
+//        rightmotor.run(100);
+//        leftmotor.run(100);
+//        delay(1300);
+//        rightmotor.run(0);
+//        leftmotor.run(0);
+//        delay(200);
+//
+//        timecount = 0;
+//        while (timecount < 5) {
+//          pinMode(leftPing, OUTPUT);
+//          digitalWrite(leftPing, LOW);
+//          delayMicroseconds(2);
+//          digitalWrite(leftPing, HIGH);
+//          delayMicroseconds(5);
+//          digitalWrite(leftPing, LOW);
+//
+//
+//          pinMode(leftPing, INPUT);
+//          durationleftPing = pulseIn(leftPing, HIGH);
+//          cmleftPing = microsecondsToCentimeters(durationleftPing);
+//
+//
+//
+//          int setPointVal = 10;
+//          int pingError = cmleftPing - setPointVal;
+//          int pingP = 25;
+//          int motorSpeedPing = pingP * pingError;
+//          int baseSpeedPing = 50;
+//
+//          int rightMotorSpeedPing = baseSpeedPing + motorSpeedPing;
+//          int leftMotorSpeedPing = baseSpeedPing - motorSpeedPing;
+//
+//          leftMotorSpeedPing = constrain(leftMotorSpeedPing, 80, 255);
+//          rightMotorSpeedPing = constrain(rightMotorSpeedPing, 80, 255);
+//
+//          //          Serial.print("\n\n\t\t");
+//          //          Serial.println(pingError);
+//          //          Serial.print("\t\t Right:");
+//          //          Serial.print(rightMotorSpeedPing);
+//          //          Serial.print("\t\t Left:");
+//          //          Serial.print(leftMotorSpeedPing);
+//
+//          if (rightMotorSpeedPing < leftMotorSpeedPing) {
+//            int oldright = rightMotorSpeedPing;
+//            rightMotorSpeedPing = leftMotorSpeedPing;
+//            leftMotorSpeedPing = oldright;
+//          }
+//
+//          rightmotor.run(-200);
+//          leftmotor.run(70);
+//
+//          //          rightmotor.run(-rightMotorSpeedPing);
+//          //          leftmotor.run(leftMotorSpeedPing);
+//          timecount++;
+//          Serial.println(timecount);
+//
+//
+//          pinMode(leftPing, OUTPUT);
+//          digitalWrite(leftPing, LOW);
+//          delayMicroseconds(2);
+//          digitalWrite(leftPing, HIGH);
+//          delayMicroseconds(5);
+//          digitalWrite(leftPing, LOW);
+//
+//
+//          pinMode(leftPing, INPUT);
+//          durationleftPing = pulseIn(leftPing, HIGH);
+//          cmleftPing = microsecondsToCentimeters(durationleftPing);
+//
+//        }
+//
+//        rightmotor.run(100);
+//        leftmotor.run(100);
+//        delay(1200);
+//        rightmotor.run(0);
+//        leftmotor.run(0);
+//        delay(200);
+//
+//      }
+//      if (right == false) {
+//        //needs to turn left
+//
+//        rightmotor.run(-100);
+//        leftmotor.run(-100);
+//        delay(1200);
+//        rightmotor.run(0);
+//        leftmotor.run(0);
+//        delay(200);
+//        timecount = 0;
+//        while (timecount < 150) {
+//          pinMode(rightPing, OUTPUT);
+//          digitalWrite(rightPing, LOW);
+//          delayMicroseconds(2);
+//          digitalWrite(rightPing, HIGH);
+//          delayMicroseconds(5);
+//          digitalWrite(rightPing, LOW);
+//
+//
+//          pinMode(rightPing, INPUT);
+//          durationrightPing = pulseIn(rightPing, HIGH);
+//          cmrightPing = microsecondsToCentimeters(durationrightPing);
+//
+//
+//
+//          int setPointVal1 = 10;
+//          int pingError1 = cmrightPing - setPointVal1;
+//          int pingP1 = 25;
+//          int motorSpeedPing1 = pingP1 * pingError1;
+//          int baseSpeedPing1 = 50;
+//
+//          int rightMotorSpeedPing1 = baseSpeedPing1 - motorSpeedPing1;
+//          int leftMotorSpeedPing1 = baseSpeedPing1 + motorSpeedPing1;
+//
+//          leftMotorSpeedPing1 = constrain(leftMotorSpeedPing1, 80, 255);
+//          rightMotorSpeedPing1 = constrain(rightMotorSpeedPing1, 80, 255);
+//
+//          //          Serial.print("\n\n\t\t");
+//          //          Serial.println(pingError);
+//          //          Serial.print("\t\t Right:");
+//          //          Serial.print(rightMotorSpeedPing);
+//          //          Serial.print("\t\t Left:");
+//          //          Serial.print(leftMotorSpeedPing);
+//
+//          if (leftMotorSpeedPing1 < rightMotorSpeedPing1) {
+//            int oldleft = leftMotorSpeedPing1;
+//            leftMotorSpeedPing1 = rightMotorSpeedPing1;
+//            rightMotorSpeedPing1 = oldleft;
+//          }
+//
+//
+//
+//          rightmotor.run(-95);
+//          leftmotor.run(225);
+//          timecount++;
+//          Serial.println(timecount);
+//
+//
+//          pinMode(leftPing, OUTPUT);
+//          digitalWrite(leftPing, LOW);
+//          delayMicroseconds(2);
+//          digitalWrite(leftPing, HIGH);
+//          delayMicroseconds(5);
+//          digitalWrite(leftPing, LOW);
+//
+//
+//          pinMode(leftPing, INPUT);
+//          durationleftPing = pulseIn(leftPing, HIGH);
+//          cmleftPing = microsecondsToCentimeters(durationleftPing);
+//
+//        }
+//
+//        rightmotor.run(-100);
+//        leftmotor.run(-100);
+//        delay(1200);
+//        rightmotor.run(0);
+//        leftmotor.run(0);
+//        delay(200);
+//
+//      }
+//
+//      x = 1;
+//    }
+//  }
   // cycle through color sensors
   for (int port : colorports) {
     I2CMulti.selectPort(port);
@@ -524,7 +531,7 @@ void loop()
     //      else {
     //        Serial.print("x");
     //      }
-    //    } 
+    //    }
 
     rightmotor.run(-rightMotorSpeed);
     leftmotor.run(leftMotorSpeed);
