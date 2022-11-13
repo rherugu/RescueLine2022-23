@@ -13,13 +13,22 @@ DFRobot_SSD1306_I2C COLOR(0x29);
 
 DFRobot_I2CMultiplexer I2CMulti(0x70);
 
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+
+//uint16_t BNO055_SAMPLERATE_DELAY_MS = 100;
+
+
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+
 #define redpin 3
 #define greenpin 5
 #define bluepin 6
 #define commonAnode true
 
 //0.04 // 0.09 //0.11
-#define Kp 0.35 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.53 // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255 // max speed of the robot
 #define leftMaxSpeed 255 // max speed of the robot
@@ -47,6 +56,7 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS347
 float red, green, blue;
 int x = 0;
 bool greenBool[2] = {false, false};
+
 void greenSquare(int red1, int green1, int blue1) {
   I2CMulti.selectPort(7); // left
   tcs.getRGB(&red, &green, &blue);
@@ -55,7 +65,7 @@ void greenSquare(int red1, int green1, int blue1) {
   //  Serial.print("\tG:\t"); Serial.print(int(green));
   //  Serial.print("\tB:\t\n"); Serial.print(int(blue));
   float ratio = green / red;
-  Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
+  //Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
   if (ratio > 1.25) {
     Serial.println("Left sensor seeing green!");
     greenBool[0] = true;
@@ -64,10 +74,168 @@ void greenSquare(int red1, int green1, int blue1) {
 
   tcs.getRGB(&red, &green, &blue);
   float ratio1 = green / red; // int(green) > 90 && int(red) < 80 && int(blue) < 100
-  Serial.print("RATIO1: "); Serial.println(ratio1);
+ // Serial.print("RATIO1: "); Serial.println(ratio1);
   if (ratio1 > 1.25) { // red = 100
     Serial.println("Right sensor seeing green!");
     greenBool[1] = true;
+  }
+}
+
+
+void turnAround() {
+  sensors_event_t orientationData , linearAccelData;
+
+  I2CMulti.selectPort(0);
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+ 
+  int value = (int)euler.x();
+  if (value>=180) {value-=360;}
+  int target = value + 180;
+  int i = value;
+
+
+
+    rightmotor.run(-105);
+   
+    leftmotor.run(105);
+   
+    delay(600);
+   
+ 
+  while (i < target) {
+     rightmotor.run(105);
+     leftmotor.run(105);
+     Serial.println("DOING EULER TURN");
+   
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+    i = (int)euler.x();
+  }
+
+    rightmotor.run(-90);
+    leftmotor.run(90);
+    delay(400);
+ 
+}
+
+void turnLeft() {
+  sensors_event_t orientationData , linearAccelData;
+
+  I2CMulti.selectPort(0);
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+ 
+  int value = (int)euler.x();
+  if (value<=70) {value+=360;}
+  int target = value - 70; // angle
+  int i = value;
+
+  rightmotor.run(0);
+   
+  leftmotor.run(0);
+   
+  delay(2000);
+
+  rightmotor.run(-90);//85
+  Serial.println("CHECKING...");
+  delay(175);//250
+   
+  I2CMulti.selectPort(6);
+  tcs.getRGB(&red, &green, &blue);
+  float ratio1 = green / red;
+  if (ratio1 > 1.25) { // red = 100
+    Serial.println("RRIGHT!!");
+    turnAround();
+  } else {
+ 
+  I2CMulti.selectPort(0);
+
+   
+    rightmotor.run(-85);  
+    leftmotor.run(85);
+    delay(300);
+   
+ 
+  while (i > target) {
+   
+      rightmotor.run(-105);
+      leftmotor.run(-105);
+      Serial.println("DOING EULER TURN");
+     
+   
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+    i = (int)euler.x();
+  }
+  double positionGreen = qtr.readLineBlack(sensorValues);
+ 
+     while (positionGreen < 2700 || positionGreen > 4300)
+     {
+      Serial.println("IN LOOP");
+      rightmotor.run(-100);
+      leftmotor.run(-100);
+      positionGreen = qtr.readLineBlack(sensorValues);
+     }
+
+    //rightmotor.run(-90);
+   // leftmotor.run(90);
+    //delay(400);
+  }
+}
+
+void turnRight() {
+  sensors_event_t orientationData , linearAccelData;
+
+  I2CMulti.selectPort(0);
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+ 
+  int value = (int)euler.x();
+  if (value>=290) {value-=360;}
+  int target = value + 70;
+  int i = value;
+
+    rightmotor.run(0);
+    leftmotor.run(0);
+    delay(2000);
+   
+    leftmotor.run(85);//85
+    Serial.println("CHECKING...");
+    delay(175);//150
+   
+  I2CMulti.selectPort(7);
+  tcs.getRGB(&red, &green, &blue);
+  float ratio = green / red;
+  if (ratio > 1.25) { // red = 100
+    Serial.println("LLEFT!!");
+    turnAround();
+  } else {
+
+  I2CMulti.selectPort(0);
+ 
+  rightmotor.run(0);
+  leftmotor.run(0);
+   
+  delay(2000);
+   
+  rightmotor.run(-85);
+  leftmotor.run(85);
+  delay(150);
+ 
+  while (i < target) {
+   
+      rightmotor.run(75);
+      leftmotor.run(75);
+     
+   
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+    i = (int)euler.x();
+  }
+  double positionGreen = qtr.readLineBlack(sensorValues);
+     while (positionGreen < 2700 || positionGreen > 4300)
+     {
+      Serial.println("IN LOOP");
+      rightmotor.run(100);
+      leftmotor.run(100);
+      positionGreen = qtr.readLineBlack(sensorValues);
+     }
+
   }
 }
 
@@ -94,6 +262,19 @@ void setup()
 {
 
   Serial.begin(9600);
+
+  Serial.println("Orientation Sensor Test"); Serial.println("");
+
+  /* Initialise the sensor */
+  I2CMulti.selectPort(0);
+  if (!bno.begin()) //Adafruit_BNO055::OPERATION_MODE_IMUPLUS
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while (1);
+  }
+
+  delay(1000);
 
   for (int port : colorports) {
     I2CMulti.selectPort(port);
@@ -183,6 +364,17 @@ bool getout = false;
 int timecount = 0;
 void loop()
 {
+//sensors_event_t orientationData , linearAccelData;
+//
+////bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+//I2CMulti.selectPort(0);
+//imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+//
+//Serial.println("Heading (x): ");
+//Serial.println((int)euler.x());
+
+//bno.begin(Adafruit_BNO055::OPERATION_MODE_IMPULSE);
+ 
 //  long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
 //  int y = 1;
 //  bool right;
@@ -422,28 +614,28 @@ void loop()
   // intersections
   if (greenBool[0] == true && greenBool[1] == false) { // left
     Serial.print("left green");
-    rightmotor.run(-100);
-    leftmotor.run(-50);
-    delay(850);
-
+   // rightmotor.run(-75);
+   // leftmotor.run(-75);
+    //delay(1377);
+    turnLeft();
     greenBool[0] = false;
     getout = true;
   }
   if (greenBool[1] == true && greenBool[0] == false) { // right
     Serial.print("right green");
-    rightmotor.run(70);
-    leftmotor.run(100);
-    delay(850);
-
+   // rightmotor.run(75);
+    //leftmotor.run(75);
+   // delay(1377);
+    turnRight();
     greenBool[1] = false;
     getout = true;
   }
   if (greenBool[0] == true && greenBool[1] == true) { // both
     Serial.print("both green");
-    rightmotor.run(-100);
-    leftmotor.run(-100);
-    delay(1700);
-
+    //rightmotor.run(-100);
+    //leftmotor.run(-100);
+    //delay(1700);
+turnAround();
     greenBool[0] = false;
     greenBool[1] = false;
 
@@ -453,8 +645,8 @@ void loop()
   if (position2222 == 0 || position2222 == 7000 && getout == false) {
 
 
-    rightmotor.run(-60);
-    leftmotor.run(60);
+    rightmotor.run(-100);
+    leftmotor.run(100);
     //    countbacks++;
     //    position2222 = qtr.readLineBlack(sensorValues);
     //    if (countbacks > 5) {
