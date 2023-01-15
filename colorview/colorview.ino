@@ -1,15 +1,19 @@
+#include <DFRobot_I2C_Multiplexer.h>
+
+#include <DFRobot_I2C_Multiplexer.h>
+
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
 
 #include "DFRobot_SSD1306_I2C.h"
-#include "DFRobot_I2CMultiplexer.h"
+#include "DFRobot_I2C_Multiplexer.h"
 #include "DFRobot_Character.h"
 #include "DFRobot_GT30L.h"
 #include <SPI.h>
 
 DFRobot_SSD1306_I2C COLOR(0x29);
 
-DFRobot_I2CMultiplexer I2CMulti(0x70);
+DFRobot_I2C_Multiplexer I2CMulti(&Wire, 0x70);
 
 
 
