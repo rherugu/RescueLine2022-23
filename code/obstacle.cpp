@@ -1,5 +1,5 @@
 void obstacle() {
-  long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
+ /* long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
   int y = 1;
   bool right;
   unsigned long startTime;
@@ -207,5 +207,5 @@ void obstacle() {
 
       x = 1;
     }
-  }
+  }*/
 }

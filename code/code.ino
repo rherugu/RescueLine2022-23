@@ -29,12 +29,12 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 //0.04 // 0.09 //0.11
 //0.47
-#define Kp 0.3  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.65  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255  // max speed of the robot
 #define leftMaxSpeed 255   // max speed of the robot
-#define rightBaseSpeed 80  // this is the speed at which the motors should spin when the robot is perfectly on the line
-#define leftBaseSpeed 80
+#define rightBaseSpeed 60  // this is the speed at which the motors should spin when the robot is perfectly on the line
+#define leftBaseSpeed 60
 
 MeMegaPiDCMotor rightmotor(PORT1B);
 
@@ -126,8 +126,8 @@ void turnLeft() {
 
   // Part 2 
   int value = (int)euler.x();
-  if (value <= 65) { value += 360; }  
-  int target = value - 65;            
+  if (value <= 50) { value += 360; }  
+  int target = value - 50;            
   int i = value;
 
   // Part 3 
@@ -135,8 +135,9 @@ void turnLeft() {
   leftmotor.run(0);
   delay(2000);
   rightmotor.run(-75); 
+  leftmotor.run(75);
   Serial.println("CHECKING...");
-  delay(275);  //250
+  delay(50);  //250
 
   // Part 4 
   I2CMultiplexer.selectPort(6);
@@ -154,12 +155,12 @@ void turnLeft() {
     delay(2000);
     rightmotor.run(-85);  /* 1. These lines of codes may not be needed 2. May need to switch positive/negative */
     leftmotor.run(85);
-    delay(900);
+    delay(700); // this is where we go straight 
 
     // Part 6
     while (i > target) {
-      rightmotor.run(-100);  
-      leftmotor.run(-100);
+      rightmotor.run(-75);  
+      leftmotor.run(-100);// changed this
       Serial.println("DOING EULER TURN");
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
@@ -168,7 +169,7 @@ void turnLeft() {
 
     // Part 7 
     double positionGreen = qtr.readLineBlack(sensorValues);
-    while (positionGreen < 2700 || positionGreen > 4300) {
+    while (positionGreen < 3200 || positionGreen > 3800) {
       Serial.println("IN LOOP");
       rightmotor.run(-100);
       leftmotor.run(-100);
@@ -186,17 +187,18 @@ void turnRight() {
 
   // Part 2
   int value = (int)euler.x();
-  if (value >= 295) { value -= 360; }
-  int target = value + 65;
+  if (value >= 310) { value -= 360; }
+  int target = value + 50;
   int i = value;
 
   // Part 3
   rightmotor.run(0);
   leftmotor.run(0);
   delay(2000);
-  leftmotor.run(75);  
+  leftmotor.run(75); 
+  rightmotor.run(-75); 
   Serial.println("CHECKING...");
-  delay(275);  
+  delay(50);  
 
   // Part 4
   I2CMultiplexer.selectPort(7);
@@ -213,25 +215,26 @@ void turnRight() {
     leftmotor.run(0);
     delay(2000);
     rightmotor.run(-85);
-    leftmotor.run(85);
-    delay(900);
+    leftmotor.run(85); // this is where we go straight
+    delay(700);
 
     // Part 6
     while (i < target) {
-      rightmotor.run(100);
-      leftmotor.run(100);
+      rightmotor.run(100);// changed this
+      leftmotor.run(75);
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
     }
 
     // Part 7
     double positionGreen = qtr.readLineBlack(sensorValues);
-    while (positionGreen < 2700 || positionGreen > 4300) {
+    while (positionGreen < 3200 || positionGreen > 3800) {
       Serial.println("IN LOOP");
       rightmotor.run(100);
       leftmotor.run(100);
       positionGreen = qtr.readLineBlack(sensorValues);
     }
+  
   }
 }
 
