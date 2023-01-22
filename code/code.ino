@@ -29,7 +29,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 //0.04 // 0.09 //0.11
 //0.47
-#define Kp 0.39  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.3  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255  // max speed of the robot
 #define leftMaxSpeed 255   // max speed of the robot
@@ -67,7 +67,7 @@ void greenSquare(int red1, int green1, int blue1) {
   //  Serial.print("\tB:\t\n"); Serial.print(int(blue));
   float ratio = green / red;
   //Serial.print("RATIO: "); Serial.println(ratio); //int(green) > 90 && int(red) < 80 && int(blue) < 100
-  if (ratio > 1.25) {
+  if (ratio > 1.5) {
     Serial.println("Left sensor seeing green!");
     greenBool[0] = true;
   }
@@ -76,7 +76,7 @@ void greenSquare(int red1, int green1, int blue1) {
   tcs.getRGB(&red, &green, &blue);
   float ratio1 = green / red;  // int(green) > 90 && int(red) < 80 && int(blue) < 100
                                // Serial.print("RATIO1: "); Serial.println(ratio1);
-  if (ratio1 > 1.25) {         // red = 100
+  if (ratio1 > 1.5) {         // red = 100
     Serial.println("Right sensor seeing green!");
     greenBool[1] = true;
   }
