@@ -29,12 +29,13 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 //0.04 // 0.09 //0.11
 //0.47
-#define Kp 0.65  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.35  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define rightMaxSpeed 255  // max speed of the robot
 #define leftMaxSpeed 255   // max speed of the robot
 #define rightBaseSpeed 60  // this is the speed at which the motors should spin when the robot is perfectly on the line
 #define leftBaseSpeed 60
+#define ellipseDirection 1
 
 MeMegaPiDCMotor rightmotor(PORT1B);
 
@@ -78,7 +79,7 @@ void greenSquare(int red1, int green1, int blue1) {
   tcs.getRGB(&red, &green, &blue);
   float ratio1 = green / red;  // int(green) > 90 && int(red) < 80 && int(blue) < 100
   // Serial.print("RATIO1: "); Serial.println(ratio1);
-  if (ratio1 > 1.5) {         // red = 100
+  if (ratio1 > 1.5) {  // red = 100
     Serial.println("Right sensor seeing green!");
     greenBool[1] = true;
   }
@@ -152,21 +153,20 @@ void turnLeft() {
   if (ratio1 > 1.25) {  // red = 100
     Serial.println("RRIGHT!!");
     turnAround();
-  }
-  else {
+  } else {
     // Part 5
     I2CMultiplexer.selectPort(0);
     rightmotor.run(0);
     leftmotor.run(0);
     delay(2000);
-    rightmotor.run(-85);  /* 1. These lines of codes may not be needed 2. May need to switch positive/negative */
+    rightmotor.run(-85); /* 1. These lines of codes may not be needed 2. May need to switch positive/negative */
     leftmotor.run(85);
-    delay(700); // this is where we go straight
+    delay(700);  // this is where we go straight
 
     // Part 6
     while (i > target) {
       rightmotor.run(-75);
-      leftmotor.run(-100);// changed this
+      leftmotor.run(-100);  // changed this
       Serial.println("DOING EULER TURN");
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
@@ -215,20 +215,19 @@ void turnRight() {
   if (ratio > 1.25) {  // red = 100
     Serial.println("LLEFT!!");
     turnAround();
-  }
-  else {
+  } else {
     // Part 5
     I2CMultiplexer.selectPort(0);
     rightmotor.run(0);
     leftmotor.run(0);
     delay(2000);
     rightmotor.run(-85);
-    leftmotor.run(85); // this is where we go straight
+    leftmotor.run(85);  // this is where we go straight
     delay(700);
 
     // Part 6
     while (i < target) {
-      rightmotor.run(100);// changed this
+      rightmotor.run(100);  // changed this
       leftmotor.run(75);
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
@@ -242,7 +241,6 @@ void turnRight() {
       leftmotor.run(100);
       positionGreen = qtr.readLineBlack(sensorValues);
     }
-
   }
 }
 
@@ -331,10 +329,9 @@ void setup() {
   Serial.println("Starting...");
   // configure the sensors
   qtr.setTypeRC();
-  qtr.setSensorPins((const uint8_t[]) {
-    28, 26, 24, 22, 29, 27, 25, 23
-  },
-  SensorCount);
+  qtr.setSensorPins((const uint8_t[]){
+                      28, 26, 24, 22, 29, 27, 25, 23 },
+                    SensorCount);
   qtr.setEmitterPin(2);
 
   // calibration
@@ -392,252 +389,160 @@ void loop() {
   cm = microsecondsToCentimeters(duration);
 
 
-  if (cm <= 18)
-  {
+  
     Serial.print("Centimeters: ");
     Serial.println(cm);
-    while (cm < 18)
-    {
-      rightmotor.run(100);
-      leftmotor.run(-100);
-        pinMode(pingPin, OUTPUT);
-  digitalWrite(pingPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(pingPin, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(pingPin, LOW);
+    if (cm < 6) {
+      //rightmotor.run(100);
+     // leftmotor.run(-100);
+      pinMode(pingPin, OUTPUT);
+      digitalWrite(pingPin, LOW);
+      delayMicroseconds(2);
+      digitalWrite(pingPin, HIGH);
+      delayMicroseconds(5);
+      digitalWrite(pingPin, LOW);
 
 
-  pinMode(pingPin, INPUT);
+      pinMode(pingPin, INPUT);
       long duration2 = pulseIn(pingPin, HIGH);
       cm = microsecondsToCentimeters(duration2);
       Serial.println(cm);
       Serial.println("Going backwards");
       // Part 1
-    sensors_event_t orientationData, linearAccelData;
-    I2CMultiplexer.selectPort(0);
-    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-
-    // Part 2
-    int value = (int)euler.x();
-  if (value >= 270) {
-    value -= 360;
-  }
-  int target = value + 90;
-  int i = value;
-    Serial.println("i"); Serial.print(i);
-    while (i < target) {
-      rightmotor.run(-100);
-      leftmotor.run(-100);
-      Serial.println("HUFHUHAHSUOHFODahfUHOUHOUFH");
+      sensors_event_t orientationData, linearAccelData;
+      I2CMultiplexer.selectPort(0);
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-      i = (int)euler.x();
-    }
-    }
-    
-  }
-  //   if (cm <= 8) {
-  //      int x = 0;
-  //      float distratio = 57.14;
-  //      while (x == 0)
-  //      {
-  //        pinMode(leftPing, OUTPUT);
-  //        digitalWrite(leftPing, LOW);
-  //        delayMicroseconds(2);
-  //        digitalWrite(leftPing, HIGH);
-  //        delayMicroseconds(5);
-  //        digitalWrite(leftPing, LOW);
-  //
-  //
-  //        pinMode(leftPing, INPUT);
-  //        durationleftPing = pulseIn(leftPing, HIGH);
-  //        cmleftPing = microsecondsToCentimeters(duration);
-  //
-  //        pinMode(rightPing, OUTPUT);
-  //        digitalWrite(rightPing, LOW);
-  //        delayMicroseconds(2);
-  //        digitalWrite(rightPing, HIGH);
-  //        delayMicroseconds(5);
-  //        digitalWrite(rightPing, LOW);
-  //
-  //
-  //        pinMode(rightPing, INPUT);
-  //        durationrightPing = pulseIn(rightPing, HIGH);
-  //        cmrightPing = microsecondsToCentimeters(durationrightPing);
-  //
-  //        if (cmleftPing < 30) {
-  //          obstacle(cmleftPing);
-  //        }
-  //
-  //      }
-  //
-  //      if (right == true) {
-  //        //needs to turn right
-  //
-  //        rightmotor.run(100);
-  //        leftmotor.run(100);
-  //        delay(1300);
-  //        rightmotor.run(0);
-  //        leftmotor.run(0);
-  //        delay(200);
-  //
-  //        timecount = 0;
-  //        while (timecount < 5) {
-  //          pinMode(leftPing, OUTPUT);
-  //          digitalWrite(leftPing, LOW);
-  //          delayMicroseconds(2);
-  //          digitalWrite(leftPing, HIGH);
-  //          delayMicroseconds(5);
-  //          digitalWrite(leftPing, LOW);
-  //
-  //
-  //          pinMode(leftPing, INPUT);
-  //          durationleftPing = pulseIn(leftPing, HIGH);
-  //          cmleftPing = microsecondsToCentimeters(durationleftPing);
-  //
-  //
-  //
-  //          int setPointVal = 10;
-  //          int pingError = cmleftPing - setPointVal;
-  //          int pingP = 25;
-  //          int motorSpeedPing = pingP * pingError;
-  //          int baseSpeedPing = 50;
-  //
-  //          int rightMotorSpeedPing = baseSpeedPing + motorSpeedPing;
-  //          int leftMotorSpeedPing = baseSpeedPing - motorSpeedPing;
-  //
-  //          leftMotorSpeedPing = constrain(leftMotorSpeedPing, 80, 255);
-  //          rightMotorSpeedPing = constrain(rightMotorSpeedPing, 80, 255);
-  //
-  //          //          Serial.print("\n\n\t\t");
-  //          //          Serial.println(pingError);
-  //          //          Serial.print("\t\t Right:");
-  //          //          Serial.print(rightMotorSpeedPing);
-  //          //          Serial.print("\t\t Left:");
-  //          //          Serial.print(leftMotorSpeedPing);
-  //
-  //          if (rightMotorSpeedPing < leftMotorSpeedPing) {
-  //            int oldright = rightMotorSpeedPing;
-  //            rightMotorSpeedPing = leftMotorSpeedPing;
-  //            leftMotorSpeedPing = oldright;
-  //          }
-  //
-  //          rightmotor.run(-200);
-  //          leftmotor.run(70);
-  //
-  //          //          rightmotor.run(-rightMotorSpeedPing);
-  //          //          leftmotor.run(leftMotorSpeedPing);
-  //          timecount++;
-  //          Serial.println(timecount);
-  //
-  //
-  //          pinMode(leftPing, OUTPUT);
-  //          digitalWrite(leftPing, LOW);
-  //          delayMicroseconds(2);
-  //          digitalWrite(leftPing, HIGH);
-  //          delayMicroseconds(5);
-  //          digitalWrite(leftPing, LOW);
-  //
-  //
-  //          pinMode(leftPing, INPUT);
-  //          durationleftPing = pulseIn(leftPing, HIGH);
-  //          cmleftPing = microsecondsToCentimeters(durationleftPing);
-  //
-  //        }
-  //
-  //        rightmotor.run(100);
-  //        leftmotor.run(100);
-  //        delay(1200);
-  //        rightmotor.run(0);
-  //        leftmotor.run(0);
-  //        delay(200);
-  //
-  //      }
-  //      if (right == false) {
-  //        //needs to turn left
-  //
-  //        rightmotor.run(-100);
-  //        leftmotor.run(-100);
-  //        delay(1200);
-  //        rightmotor.run(0);
-  //        leftmotor.run(0);
-  //        delay(200);
-  //        timecount = 0;
-  //        while (timecount < 150) {
-  //          pinMode(rightPing, OUTPUT);
-  //          digitalWrite(rightPing, LOW);
-  //          delayMicroseconds(2);
-  //          digitalWrite(rightPing, HIGH);
-  //          delayMicroseconds(5);
-  //          digitalWrite(rightPing, LOW);
 
-  //
-  //
-  //          pinMode(rightPing, INPUT);
-  //          durationrightPing = pulseIn(rightPing, HIGH);
-  //          cmrightPing = microsecondsToCentimeters(durationrightPing);
-  //
-  //
-  //
-  //          int setPointVal1 = 10;
-  //          int pingError1 = cmrightPing - setPointVal1;
-  //          int pingP1 = 25;
-  //          int motorSpeedPing1 = pingP1 * pingError1;
-  //          int baseSpeedPing1 = 50;
-  //
-  //          int rightMotorSpeedPing1 = baseSpeedPing1 - motorSpeedPing1;
-  //          int leftMotorSpeedPing1 = baseSpeedPing1 + motorSpeedPing1;
-  //
-  //          leftMotorSpeedPing1 = constrain(leftMotorSpeedPing1, 80, 255);
-  //          rightMotorSpeedPing1 = constrain(rightMotorSpeedPing1, 80, 255);
-  //
-  //          //          Serial.print("\n\n\t\t");
-  //          //          Serial.println(pingError);
-  //          //          Serial.print("\t\t Right:");
-  //          //          Serial.print(rightMotorSpeedPing);
-  //          //          Serial.print("\t\t Left:");
-  //          //          Serial.print(leftMotorSpeedPing);
-  //
-  //          if (leftMotorSpeedPing1 < rightMotorSpeedPing1) {
-  //            int oldleft = leftMotorSpeedPing1;
-  //            leftMotorSpeedPing1 = rightMotorSpeedPing1;
-  //            rightMotorSpeedPing1 = oldleft;
-  //          }
-  //
-  //
-  //
-  //          rightmotor.run(-95);
-  //          leftmotor.run(225);
-  //          timecount++;
-  //          Serial.println(timecount);
-  //
-  //
-  //          pinMode(leftPing, OUTPUT);
-  //          digitalWrite(leftPing, LOW);
-  //          delayMicroseconds(2);
-  //          digitalWrite(leftPing, HIGH);
-  //          delayMicroseconds(5);
-  //          digitalWrite(leftPing, LOW);
-  //
-  //
-  //          pinMode(leftPing, INPUT);
-  //          durationleftPing = pulseIn(leftPing, HIGH);
-  //          cmleftPing = microsecondsToCentimeters(durationleftPing);
-  //
-  //        }
-  //
-  //        rightmotor.run(-100);
-  //        leftmotor.run(-100);
-  //        delay(1200);
-  //        rightmotor.run(0);
-  //        leftmotor.run(0);
-  //        delay(200);
-  //
-  //      }
-  //
-  //      x = 1;
-  //    }
-  //  }
+      // Part 2
+      int value = (int)euler.x();
+      Serial.print("Value = ");
+      Serial.println(value);
+      if (value >= 270) {
+        value -= 360;
+      }
+      int target = value + 90;
+      int i = value;
+      while (i < target) {
+        rightmotor.run(100);
+        leftmotor.run(100);
+        imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+        i = (int)euler.x();
+      
+      }
+
+      pinMode(pingPin, OUTPUT);
+      digitalWrite(pingPin, LOW);
+      delayMicroseconds(2);
+      digitalWrite(pingPin, HIGH);
+      delayMicroseconds(5);
+      digitalWrite(pingPin, LOW);
+
+
+      pinMode(pingPin, INPUT);
+      long duration121 = pulseIn(pingPin, HIGH);
+      long cmRIGHT = microsecondsToCentimeters(duration121);
+      if (cmRIGHT <= 30) {
+        // you have to turn left around the obstacle
+        sensors_event_t orientationData, linearAccelData;
+        I2CMultiplexer.selectPort(0);
+        imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
+        // Part 2
+        int value = (int)euler.x();
+        // Serial.print("Value = "); Serial.println(value);
+        if (value >= 180) {
+          value -= 360;
+        }
+        int target = value + 180;
+        int i = value;
+        bool seeWall = true;
+        while (i < target) {
+          rightmotor.run(100);
+          leftmotor.run(100);
+          imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+          i = (int)euler.x();
+          //  Serial.print("i="); Serial.println(i);
+        }
+        //RUN ELLIPSE CODE
+
+      } else {
+        /*int value = (int)euler.x();
+        Serial.print("Value324342324234234234234234234234234324gsgffgdfdfg = "); Serial.println(value);
+        if (value >= 225) {
+          value -= 360;
+        }
+        rightmotor.run(0);
+        leftmotor.run(0);
+        delay(1000);
+        int target = value + 135;
+        int i = value;
+     //   while (i <= (target-3) || i >= (target+3)) {
+       while(i < target){
+          Serial.println("FASFDFDFDF");
+          Serial.println(i);
+          rightmotor.run(-118); //-88
+          leftmotor.run(36); // 35
+          imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+          i = (int)euler.x();
+
+        }
+        */
+          rightmotor.run(-118); //-88
+          leftmotor.run(36); // 35
+
+
+        delay(3850);
+
+        rightmotor.run(0); //-88
+          leftmotor.run(0); // 35
+          delay(5000);
+
+          double position22 = qtr.readLineBlack(sensorValues);
+          while (position22 > 4500 || position22 < 3500)
+          {
+            rightmotor.run(-50); 
+            leftmotor.run(50);
+            position22 = qtr.readLineBlack(sensorValues);
+
+          }
+          rightmotor.run(0); //-88
+          leftmotor.run(0); // 35
+          delay(5000);
+
+           pinMode(pingPin, OUTPUT);
+      digitalWrite(pingPin, LOW);
+      delayMicroseconds(2);
+      digitalWrite(pingPin, HIGH);
+      delayMicroseconds(5);
+      digitalWrite(pingPin, LOW);
+
+
+      pinMode(pingPin, INPUT);
+      long duration1211 = pulseIn(pingPin, HIGH);
+      long cmRIGHT1 = microsecondsToCentimeters(duration121);
+
+       /*
+        int value1 = (int)euler.x();
+        Serial.print("VALUEE = ");
+        Serial.println(value);
+        if (value1 >= 270) {
+          value1 -= 360;
+        }
+        int target1 = value1 + 90;
+        int i1 = value1;
+        while (i1 < target1) {
+          rightmotor.run(100);
+          leftmotor.run(100);
+          imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+          i1 = (int)euler.x();
+        }
+        delay(8000);
+       */
+        
+      }
+    }
+  
+
   // cycle through color sensors
   for (int port : colorports) {
     I2CMultiplexer.selectPort(port);
