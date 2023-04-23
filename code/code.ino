@@ -28,7 +28,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 #define commonAnode true
 
 //0.133
-#define Kp 0.133  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.14  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define Kp2 0.4
 
@@ -69,8 +69,8 @@ void circle() {
   rightmotor.run(-36);
   leftmotor.run(108);
 
-  //3850
-  delay(4800);
+  //4800
+  delay(4750);
 
   rightmotor.run(0);  //-88
   leftmotor.run(0);   // 35
@@ -280,10 +280,10 @@ void turnRight() {
 
   // Part 2
   int value = (int)euler.x();
-  if (value >= 320) {
+  if (value >= 332) {
     value -= 360;
   }
-  int target = value + 40;
+  int target = value + 28;
   int i = value;
 
   // Part 3
@@ -553,6 +553,10 @@ void loop() {
       pinMode(pingPin, INPUT);
       long duration1211 = pulseIn(pingPin, HIGH);
       long cmRIGHT1 = microsecondsToCentimeters(duration121);
+      
+      rightmotor.run(-120);
+      leftmotor.run(120);
+      delay(500);
       rightmotor.run(-120);
       leftmotor.run(-120);
       delay(500);
@@ -562,7 +566,7 @@ void loop() {
       leftmotor.run(36);     // 35
 
 
-      delay(4800);
+      delay(4750);
 
       rightmotor.run(0);  //-88
       leftmotor.run(0);   // 35
@@ -589,6 +593,9 @@ void loop() {
       pinMode(pingPin, INPUT);
       long duration1211 = pulseIn(pingPin, HIGH);
       long cmRIGHT1 = microsecondsToCentimeters(duration121);
+        rightmotor.run(-120);
+      leftmotor.run(120);
+      delay(500);
       rightmotor.run(120);
       leftmotor.run(120);
       delay(500);
@@ -676,6 +683,15 @@ void loop() {
 
   else {  // Proportional line tracing
  // if (kpChange == false) {
+   
+  I2CMultiplexer.selectPort(0);
+   sensors_event_t orientationData, linearAccelData;
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
+  // Part 2
+  int value = (int)euler.y();
+  Serial.println("VALUEEEE" + value); 
+
     countbacks = 0;
     double position = qtr.readLineBlack(sensorValues);
     unsigned int sensor_values[8];
