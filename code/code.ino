@@ -28,7 +28,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 #define commonAnode true
 
 //0.133
-#define Kp 0.14  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.13  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define Kp2 0.4
 
@@ -168,21 +168,18 @@ void turnAround() {
 
 
 
-  rightmotor.run(-105);
 
-  leftmotor.run(105);
-
-  delay(600);
 
 
   while (i < target) {
     rightmotor.run(105);
     leftmotor.run(105);
+    Serial.println("Spinning...");
 
     imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
     i = (int)euler.x();
   }
-
+  Serial.println(" Done Spinning...");
   rightmotor.run(-90);
   leftmotor.run(90);
   delay(400);
@@ -205,10 +202,10 @@ void turnLeft() {
 
   // Part 2
   int value = (int)euler.x();
-  if (value <= 40) {
+  if (value <= 28) {
     value += 360;
   }
-  int target = value - 40;
+  int target = value - 28;
   int i = value;
 
   // Part 3
@@ -566,7 +563,7 @@ void loop() {
       leftmotor.run(36);     // 35
 
 
-      delay(4750);
+      delay(4900);
 
       rightmotor.run(0);  //-88
       leftmotor.run(0);   // 35
@@ -595,7 +592,7 @@ void loop() {
       long cmRIGHT1 = microsecondsToCentimeters(duration121);
         rightmotor.run(-120);
       leftmotor.run(120);
-      delay(500);
+      delay(400);
       rightmotor.run(120);
       leftmotor.run(120);
       delay(500);
