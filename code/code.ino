@@ -27,15 +27,15 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 #define bluepin 6
 #define commonAnode true
 
-//0.133
-#define Kp 0.13  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+//0.133 // .14
+#define Kp 0.14  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define Kp2 0.4
 
 #define rightMaxSpeed 255  // max speed of the robot
 #define leftMaxSpeed 255   // max speed of the robot
-#define rightBaseSpeed 60  // this is the speed at which the motors should spin when the robot is perfectly on the line
-#define leftBaseSpeed 60
+#define rightBaseSpeed 80  // this is the speed at which the motors should spin when the robot is perfectly on the line
+#define leftBaseSpeed 80
 #define ellipseDirection 1
 
 MeMegaPiDCMotor rightmotor(PORT1B);
@@ -186,6 +186,11 @@ void turnAround() {
 }
 
 void turnLeft() {
+   /*double pl = qtr.readLineBlack(sensorValues);
+   while (pl < 3000 || pl > 4000) {
+    rightmotor.run(60);
+    leftmotor.run(60);
+   }*/
   kpChange = true;
   Serial.println("LEFT_FUNCITON");
   /* double positionGreen2 = qtr.readLineBlack(sensorValues); // FHOIHOSIDHOUHOIUFHOHIODHFOHOISHDFOIDHFOISHDOIHDFOIHFOIHFODOIDFHOIDFHOID
@@ -232,13 +237,13 @@ void turnLeft() {
     delay(2000);
     rightmotor.run(-85); /* 1. These lines of codes may not be needed 2. May need to switch positive/negative */
     leftmotor.run(85);
-    delay(700);  // this is where we go straight // 700
+    delay(300);  // this is where we go straight // 700
 
     // Part 6
 
     while (i > target) {
-      rightmotor.run(-75);
-      leftmotor.run(-100);  // changed this
+      rightmotor.run(-120); // -75
+      leftmotor.run(0);  // -100
 
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
@@ -253,14 +258,18 @@ void turnLeft() {
       leftmotor.run(-150); // -100
       positionGreen = qtr.readLineBlack(sensorValues);
     }
-    //rightmotor.run(100);
-    //leftmotor.run(-100);
-  //  delay(200);
+    rightmotor.run(100);
+    leftmotor.run(-100);
+    delay(100);
   }
 }
 
 void turnRight() {
-  
+  /*double pl = qtr.readLineBlack(sensorValues);
+   while (pl < 3000 || pl > 4000) {
+    rightmotor.run(-60);
+    leftmotor.run(60);
+   }*/
   kpChange = true;
   Serial.println("Right[ FUnciton");
   /*double positionGreen2 = qtr.readLineBlack(sensorValues); // FHOIHOSIDHOUHOIUFHOHIODHFOHOISHDFOIDHFOISHDOIHDFOIHFOIHFODOIDFHOIDFHOID
@@ -307,12 +316,12 @@ void turnRight() {
     delay(2000);
     rightmotor.run(-85);
     leftmotor.run(85);  // this is where we go straight
-    delay(700);
+    delay(300);
 
     // Part 6
     while (i < target) {
-      rightmotor.run(100);  // changed this
-      leftmotor.run(75);
+      rightmotor.run(0);  // changed this
+      leftmotor.run(120);
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
     }
@@ -325,9 +334,9 @@ void turnRight() {
       leftmotor.run(150);
       positionGreen = qtr.readLineBlack(sensorValues);
     }
-   // rightmotor.run(100);
-   // leftmotor.run(-100);
-    //delay(200);
+   rightmotor.run(100);
+    leftmotor.run(-100);
+    delay(100);
   }
 }
 
@@ -519,7 +528,7 @@ void loop() {
     }*/
     rightmotor.run(100);
     leftmotor.run(100);
-    delay(1000);
+    delay(1150);
 
     pinMode(pingPin, OUTPUT);
     digitalWrite(pingPin, LOW);
@@ -688,19 +697,21 @@ void loop() {
   // Part 2
   int value = (int)euler.y();
   Serial.println("VALUEEEE" + value); 
-
     countbacks = 0;
     double position = qtr.readLineBlack(sensorValues);
     unsigned int sensor_values[8];
-    double error = position - 2950.0;
+    double error = position - 3500.0;//2950
     if (error < 500 && error > -500) {
-      error = error / 2;
+      error = error / 3.5;
     }
+   /* if (error > 2500 || error < -2500) {
+      error *= 2;
+    }*/
 
     double motorSpeed = Kp * error;
     int diffError = error - lasterror;
 
-
+    
 
     lasterror = error;
 
@@ -711,6 +722,8 @@ void loop() {
     int leftMotorSpeed = leftBaseSpeed - motorSpeed;
     leftMotorSpeed = constrain(leftMotorSpeed, -175, 175);
     rightMotorSpeed = constrain(rightMotorSpeed, -175, 175);
+
+ 
 
 
     char buf[60] = { 0 };
