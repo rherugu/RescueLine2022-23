@@ -28,7 +28,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 #define commonAnode true
 
 //0.133 // .14
-#define Kp 0.14  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kp 0.121  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define Kp2 0.4
 
@@ -260,7 +260,9 @@ void turnLeft() {
     }
     rightmotor.run(100);
     leftmotor.run(-100);
-    delay(100);
+    delay(250);
+
+    
   }
 }
 
@@ -336,8 +338,9 @@ void turnRight() {
     }
    rightmotor.run(100);
     leftmotor.run(-100);
-    delay(100);
+    delay(250);
   }
+ 
 }
 
 long microsecondsToInches(long microseconds) {
