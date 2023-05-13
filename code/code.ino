@@ -27,15 +27,15 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 #define bluepin 6
 #define commonAnode true
 
-//0.133 // .14
-#define Kp 0.121  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+// .14 // 0.08
+#define Kp 0.07190090  // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
 // experiment to 8determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
 #define Kp2 0.4
 
 #define rightMaxSpeed 255  // max speed of the robot
 #define leftMaxSpeed 255   // max speed of the robot
 #define rightBaseSpeed 80  // this is the speed at which the motors should spin when the robot is perfectly on the line
-#define leftBaseSpeed 80
+#define leftBaseSpeed 80   //80
 #define ellipseDirection 1
 
 MeMegaPiDCMotor rightmotor(PORT1B);
@@ -50,13 +50,15 @@ const int rightPing = A11;
 const int leftPing = A12;
 
 long int t1 = 1000000000000000;
-
+bool checkSilver = true;
 int colorports[] = { 6, 7 };
 // our RGB -> eye-recognized gamma color
 byte gammatable[256];
 
-bool kpChange = false; 
+bool kpChange = false;
 
+unsigned long previousMillis = 0;
+const unsigned long interval = 3000;
 
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
 
@@ -186,7 +188,7 @@ void turnAround() {
 }
 
 void turnLeft() {
-   /*double pl = qtr.readLineBlack(sensorValues);
+  /*double pl = qtr.readLineBlack(sensorValues);
    while (pl < 3000 || pl > 4000) {
     rightmotor.run(60);
     leftmotor.run(60);
@@ -242,8 +244,8 @@ void turnLeft() {
     // Part 6
 
     while (i > target) {
-      rightmotor.run(-120); // -75
-      leftmotor.run(0);  // -100
+      rightmotor.run(-120);  // -75
+      leftmotor.run(0);      // -100
 
       imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
       i = (int)euler.x();
@@ -254,15 +256,13 @@ void turnLeft() {
     double positionGreen = qtr.readLineBlack(sensorValues);
     while (positionGreen < 3200 || positionGreen > 3800) {
       //Serial.println("IN LOOP");
-      rightmotor.run(-150); // -100
-      leftmotor.run(-150); // -100
+      rightmotor.run(-150);  // -100
+      leftmotor.run(-150);   // -100
       positionGreen = qtr.readLineBlack(sensorValues);
     }
     rightmotor.run(100);
     leftmotor.run(-100);
-    delay(250);
-
-    
+    delay(200);
   }
 }
 
@@ -272,6 +272,16 @@ void turnRight() {
     rightmotor.run(-60);
     leftmotor.run(60);
    }*/
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis < interval) {
+    // Function was called again within 3 seconds
+    // Do something here, like setting a flag or displaying an error message
+    rightmotor.run(0);
+    leftmotor.run(0);
+    delay(5000);
+  }
+  previousMillis = currentMillis;
   kpChange = true;
   Serial.println("Right[ FUnciton");
   /*double positionGreen2 = qtr.readLineBlack(sensorValues); // FHOIHOSIDHOUHOIUFHOHIODHFOHOISHDFOIDHFOISHDOIHDFOIHFOIHFODOIDFHOIDFHOID
@@ -336,11 +346,10 @@ void turnRight() {
       leftmotor.run(150);
       positionGreen = qtr.readLineBlack(sensorValues);
     }
-   rightmotor.run(100);
+    rightmotor.run(100);
     leftmotor.run(-100);
-    delay(250);
+    delay(200);
   }
- 
 }
 
 long microsecondsToInches(long microseconds) {
@@ -469,35 +478,39 @@ bool getout = false;
 int timecount = 0;
 
 void loop() {
-  //OBSTACLE STARTS HERE OBSTACLE STARTS HERE ------------------------------------------------------------------------------------------------------------------------------------
-  //OBSTACLE STARTS HERE OBSTACLE STARTS HERE
-  //OBSTACLE STARTS HERE OBSTACLE STARTS HERE
-  long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
-  int y = 1;
-  bool right;
-  unsigned long startTime;
-  unsigned long totalTime;
-  pinMode(pingPin, OUTPUT);
-  digitalWrite(pingPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(pingPin, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(pingPin, LOW);
+  while (checkSilver) {
 
 
-  pinMode(pingPin, INPUT);
-  duration = pulseIn(pingPin, HIGH);
-  inches = microsecondsToInches(duration);
-  cm = microsecondsToCentimeters(duration);
-
-
-
-  //Serial.print("Centimeters: ");
-  //Serial.println(cm);
-  if (cm < 9) {
-    //rightmotor.run(100);
-    // leftmotor.run(-100);
+    //OBSTACLE STARTS HERE OBSTACLE STARTS HERE ------------------------------------------------------------------------------------------------------------------------------------
+    //OBSTACLE STARTS HERE OBSTACLE STARTS HERE
+    //OBSTACLE STARTS HERE OBSTACLE STARTS HERE
+    long duration, inches, cm, durationleftPing, durationrightPing, cmleftPing, cmrightPing;
+    int y = 1;
+    bool right;
+    unsigned long startTime;
+    unsigned long totalTime;
     pinMode(pingPin, OUTPUT);
+    digitalWrite(pingPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(pingPin, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(pingPin, LOW);
+
+
+    pinMode(pingPin, INPUT);
+    duration = pulseIn(pingPin, HIGH);
+    inches = microsecondsToInches(duration);
+    cm = microsecondsToCentimeters(duration);
+
+
+
+
+    if (cm < 12.5) {
+      delay(1000);
+      rightmotor.run(100);
+      leftmotor.run(100);
+      delay(1150);
+      /* pinMode(pingPin, OUTPUT);
     digitalWrite(pingPin, LOW);
     delayMicroseconds(2);
     digitalWrite(pingPin, HIGH);
@@ -510,25 +523,7 @@ void loop() {
     cm = microsecondsToCentimeters(duration2);
     Serial.println(cm);
     Serial.println("Going backwards");
-    // Part 1
-    /*sensors_event_t orientationData, linearAccelData;
-    I2CMultiplexer.selectPort(0);
-    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-    // Part 2
-    int value = (int)euler.x();
-    Serial.print("Value = ");
-    Serial.println(value);
-    if (value >= 270) {
-      value -= 360;
-    }
-    int target = value + 90;
-    int i = value;
-    while (i < target) {
-      rightmotor.run(100);
-      leftmotor.run(100);
-      imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-      i = (int)euler.x();
-    }*/
+
     rightmotor.run(100);
     leftmotor.run(100);
     delay(1150);
@@ -544,7 +539,7 @@ void loop() {
     pinMode(pingPin, INPUT);
     long duration121 = pulseIn(pingPin, HIGH);
     long cmRIGHT = microsecondsToCentimeters(duration121);
-    if (cmRIGHT <= 15) {
+    if (cmRIGHT <= 12) {
       // you have to turn left around the obstacle
       rightmotor.run(0);
       leftmotor.run(0);
@@ -562,30 +557,42 @@ void loop() {
       pinMode(pingPin, INPUT);
       long duration1211 = pulseIn(pingPin, HIGH);
       long cmRIGHT1 = microsecondsToCentimeters(duration121);
-      
+
       rightmotor.run(-120);
       leftmotor.run(120);
       delay(500);
       rightmotor.run(-120);
       leftmotor.run(-120);
       delay(500);
-    } else {
+    } else { */
 
       rightmotor.run(-108);  //-88
-      leftmotor.run(36);     // 35
+      leftmotor.run(42);     // 35
 
 
-      delay(4900);
+      delay(4500);
+      rightmotor.run(-100);
+      leftmotor.run(-100);
+      delay(500);
+
+
 
       rightmotor.run(0);  //-88
       leftmotor.run(0);   // 35
       delay(5000);
-
+      long dir = millis();
       double position22 = qtr.readLineBlack(sensorValues);
       while (position22 > 4500 || position22 < 3500) {
         rightmotor.run(-50);
         leftmotor.run(50);
         position22 = qtr.readLineBlack(sensorValues);
+        if (millis() - dir >= 4000) {
+          while (position22 > 4500 || position22 < 3500) {
+            rightmotor.run(50);
+            leftmotor.run(-50);
+            position22 = qtr.readLineBlack(sensorValues);
+          }
+        }
       }
       rightmotor.run(0);  //-88
       leftmotor.run(0);   // 35
@@ -599,163 +606,112 @@ void loop() {
       digitalWrite(pingPin, LOW);
 
 
-      pinMode(pingPin, INPUT);
-      long duration1211 = pulseIn(pingPin, HIGH);
-      long cmRIGHT1 = microsecondsToCentimeters(duration121);
-        rightmotor.run(-120);
+
+      rightmotor.run(-120);
       leftmotor.run(120);
-      delay(400);
+      delay(450);
       rightmotor.run(120);
       leftmotor.run(120);
-      delay(500);
+      delay(850);
     }
-  }
 
 
-  // cycle through color sensors
-  for (int port : colorports) {
-    I2CMultiplexer.selectPort(port);
-    Serial.print("\t");
-    tcs.getRGB(&red, &green, &blue);
-    greenSquare(int(red), int(green), int(blue));
-     Serial.print(int(red)); Serial.print("    "); Serial.print(int(green));Serial.print("    "); Serial.print((int)blue);Serial.print("      RATIO: ");
-     Serial.println(float(green) / float(red));
-
-    tcs.setInterrupt(true);  // turn off LED
-
-    Serial.print("\t");
-    Serial.print("\n");
-    // port 7 is left, port 6 is right
-  }
-  // intersections
-  if (greenBool[0] == true && greenBool[1] == false) {  // left
-    Serial.print("left green");
-    qtr.read(sensorValues);
-    int count = 0;
-    for (uint8_t i = 4; i < SensorCount; i++) {
-      count+=sensorValues[i];
-    }
-    if (count >= 5500) {
-      rightmotor.run(-200);
-      leftmotor.run(200);
-      delay(136);
+    // cycle through color sensors
+    for (int port : colorports) {
+      I2CMultiplexer.selectPort(port);
       
-    greenBool[0] = false;
-      getout = true;
-    } else {
-      turnLeft();
+      tcs.getRGB(&red, &green, &blue);
+      greenSquare(int(red), int(green), int(blue));
+    
+
+      tcs.setInterrupt(true);  // turn off LED
+
+      // port 7 is left, port 6 is right
+    }
+    // intersections
+    if (greenBool[0] == true && greenBool[1] == false) {  // left
+      Serial.print("left green");
+      qtr.read(sensorValues);
+      int count = 0;
+      for (uint8_t i = 4; i < SensorCount; i++) {
+        count += sensorValues[i];
+      }
+      if (count >= 5500) {
+        rightmotor.run(-200);
+        leftmotor.run(200);
+        delay(136);
+
+        greenBool[0] = false;
+        getout = true;
+      } else {
+        turnLeft();
+        greenBool[0] = false;
+        getout = true;
+      }
+    }
+    if (greenBool[1] == true && greenBool[0] == false) {  // right
+      Serial.print("right green");
+      qtr.read(sensorValues);
+      int count = 0;
+      for (uint8_t i = 0; i < 4; i++) {
+        count += sensorValues[i];
+      }
+      if (count >= 5500) {
+        rightmotor.run(-200);
+        leftmotor.run(200);
+        delay(136);
+
+        greenBool[1] = false;
+        getout = true;
+      } else {
+        turnRight();
+        greenBool[1] = false;
+        getout = true;
+      }
+    }
+    if (greenBool[0] == true && greenBool[1] == true) {  // both
+      Serial.print("both green");
+      //rightmotor.run(-100);
+      //leftmotor.run(-100);
+      //delay(1700);
+      turnAround();
       greenBool[0] = false;
+      greenBool[1] = false;
+
       getout = true;
     }
-  }
-  if (greenBool[1] == true && greenBool[0] == false) {  // right
-    Serial.print("right green");
-   qtr.read(sensorValues);
-    int count = 0;
-    for (uint8_t i = 0; i < 4; i++) {
-      count+=sensorValues[i];
+    double position2222 = qtr.readLineBlack(sensorValues);
+    if (position2222 == 0 || position2222 == 7000 && getout == false) {
+
+
+      rightmotor.run(-100);
+      leftmotor.run(100);
+
+
+      getout = false;
     }
-    if (count >= 5500) {
-      rightmotor.run(-200);
-      leftmotor.run(200);
-      delay(136);
-      
-    greenBool[1] = false;
-    getout = true;
-    } else {
-    turnRight();
-    greenBool[1] = false;
-    getout = true;
-    }
-  }
-  if (greenBool[0] == true && greenBool[1] == true) {  // both
-    Serial.print("both green");
-    //rightmotor.run(-100);
-    //leftmotor.run(-100);
-    //delay(1700);
-    turnAround();
-    greenBool[0] = false;
-    greenBool[1] = false;
 
-    getout = true;
-  }
-  double position2222 = qtr.readLineBlack(sensorValues);
-  if (position2222 == 0 || position2222 == 7000 && getout == false) {
+    else {  // Proportional line tracing
+            // if (kpChange == false) {
 
+      I2CMultiplexer.selectPort(0);
+      sensors_event_t orientationData, linearAccelData;
+      imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
 
-    rightmotor.run(-100);
-    leftmotor.run(100);
-
-
-    getout = false;
-  }
-
-  else {  // Proportional line tracing
- // if (kpChange == false) {
-   
-  I2CMultiplexer.selectPort(0);
-   sensors_event_t orientationData, linearAccelData;
-  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-
-  // Part 2
-  int value = (int)euler.y();
-  Serial.println("VALUEEEE" + value); 
-    countbacks = 0;
-    double position = qtr.readLineBlack(sensorValues);
-    unsigned int sensor_values[8];
-    double error = position - 3500.0;//2950
-    if (error < 500 && error > -500) {
-      error = error / 3.5;
-    }
-   /* if (error > 2500 || error < -2500) {
-      error *= 2;
-    }*/
-
-    double motorSpeed = Kp * error;
-    int diffError = error - lasterror;
-
-    
-
-    lasterror = error;
-
-    double Kd = diffError;
-
-
-    int rightMotorSpeed = rightBaseSpeed + motorSpeed;
-    int leftMotorSpeed = leftBaseSpeed - motorSpeed;
-    leftMotorSpeed = constrain(leftMotorSpeed, -175, 175);
-    rightMotorSpeed = constrain(rightMotorSpeed, -175, 175);
-
- 
-
-
-    char buf[60] = { 0 };
-
-    //Serial.print("POSITION:       "); Serial.println(position);
-
-
-    rightmotor.run(-rightMotorSpeed);
-    leftmotor.run(leftMotorSpeed);
-  /*}
-  else {
-    
-    if (millis() < t1){
-      t1 = millis();
-    }
-    Serial.println("NEW KP VALUE");
-    if (millis() - t1 == 3000) {
-      kpChange = false;
-      Serial.println("KPCHANGE = FALSE");
-    } else {
+      // Part 2
+      int value = (int)euler.y();
       countbacks = 0;
       double position = qtr.readLineBlack(sensorValues);
       unsigned int sensor_values[8];
-      double error = position - 2950.0;
+      double error = position - 3500.0;  //2950
       if (error < 500 && error > -500) {
-        error = error / 2;
+        error = error / 3.5;
       }
+      /* if (error > 2500 || error < -2500) {
+      error *= 2;
+    }*/
 
-      double motorSpeed = Kp2 * error;
+      double motorSpeed = Kp * error;
       int diffError = error - lasterror;
 
 
@@ -765,10 +721,12 @@ void loop() {
       double Kd = diffError;
 
 
-      int rightMotorSpeed = 40 + motorSpeed;
-      int leftMotorSpeed = 40 - motorSpeed;
+      int rightMotorSpeed = rightBaseSpeed + motorSpeed;
+      int leftMotorSpeed = leftBaseSpeed - motorSpeed;
       leftMotorSpeed = constrain(leftMotorSpeed, -175, 175);
       rightMotorSpeed = constrain(rightMotorSpeed, -175, 175);
+
+
 
 
       char buf[60] = { 0 };
@@ -778,18 +736,46 @@ void loop() {
 
       rightmotor.run(-rightMotorSpeed);
       leftmotor.run(leftMotorSpeed);
-    }
-  }*/
 
+      I2CMultiplexer.selectPort(7);  // left
+      uint16_t r, g, b, c, colorTemp, lux;
+     
+
+      tcs.getRawData(&r, &g, &b, &c);
+      colorTemp = tcs.calculateColorTemperature(r, g, b);
+      lux = tcs.calculateLux(r, g, b);
+        Serial.print("Color Temp: "); Serial.print(colorTemp, DEC); Serial.print(" K - ");
+  Serial.print("Lux: "); Serial.print(lux, DEC); Serial.print(" - ");
+  Serial.print("R: "); Serial.print(r, DEC); Serial.print(" ");
+  Serial.print("G: "); Serial.print(g, DEC); Serial.print(" ");
+  Serial.print("B: "); Serial.print(b, DEC); Serial.print(" ");
+  Serial.print("C: "); Serial.print(c, DEC); Serial.print(" ");
+  Serial.println(" ");
+      if (isSilver(r, g, b, c)) {
+        checkSilver = false;
+      } 
 
 #if defined(ARDUINO_ARCH_ESP32)
-    ledcWrite(1, gammatable[(int)red]);
-    ledcWrite(2, gammatable[(int)green]);
-    ledcWrite(3, gammatable[(int)blue]);
+      ledcWrite(1, gammatable[(int)red]);
+      ledcWrite(2, gammatable[(int)green]);
+      ledcWrite(3, gammatable[(int)blue]);
 #else
-    analogWrite(redpin, gammatable[(int)red]);
-    analogWrite(greenpin, gammatable[(int)green]);
-    analogWrite(bluepin, gammatable[(int)blue]);
+      analogWrite(redpin, gammatable[(int)red]);
+      analogWrite(greenpin, gammatable[(int)green]);
+      analogWrite(bluepin, gammatable[(int)blue]);
 #endif
+    }
   }
+  rightmotor.run(0);
+  leftmotor.run(0);
+}
+
+bool isSilver(uint16_t r, uint16_t g, uint16_t b, uint16_t c) {
+  // Set your threshold values based on your testing and observation
+  uint16_t clearThreshold = 1000; // example value, adjust accordingly
+  bool isHighIntensity = c > clearThreshold;
+
+  // You may also check for certain color balance between r, g, b channels as per your requirement
+
+  return isHighIntensity;
 }
